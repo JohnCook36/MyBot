@@ -12,13 +12,15 @@ bot.setMyCommands([
     {command: '/info', description: 'Номера экстренных служб'},
     {command: '/flooded', description: 'Затопил квартиру'},
     {command: '/report', description: 'Сообщить о проблеме'},
+    {command: '/request_help', description: 'Запросить помощь'},
     {command: '/help', description: 'Получить справку'},
 ]);
 
 const emergencyNumbers = `
-[240\\-03\\-98](tel:+84732400398) УК Здоровья диспетчер
-[233\\-17\\-54](tel:+84732331754) УК Здоровья
-[89202295966](tel:+79202295966) Аварийная служба УК
+[211\\-01\\-89](tel:84732400389) УК Здоровья
+[240\\-03\\-98](tel:84732400398) УК Здоровья диспетчер
+[233\\-17\\-54](tel:84732331754) УК Здоровья слесарь
+[89202295966](tel:89202295966) Аварийная служба УК
 `;
 
 bot.on('new_chat_members', (msg) => {
@@ -35,6 +37,26 @@ bot.on('new_chat_members', (msg) => {
 // Обработчик команды /info
 bot.onText(/\/info/, (msg) => {
     bot.sendMessage(msg.chat.id, `Полезные номера:\n${emergencyNumbers}`, { parse_mode: 'MarkdownV2' });
+});
+
+bot.onText(/\/request_help/, (msg) => {
+    const chatId = msg.chat.id;
+
+    bot.sendMessage(chatId, 'Чем нужно помочь?');
+    bot.once('message', async (msg) => {
+        const helpRequest = msg.text;
+        const username = msg.from.username || msg.from.first_name;
+        const helpMessage = `🆘 ${username} просит о помощи: ${helpRequest}`;
+        try {
+            // Отправляем сообщение с предупреждением и ссылкой
+            const pinnedMessage = await bot.sendMessage(chatId, helpMessage);
+
+            // Закрепляем сообщение в чате
+            await bot.pinChatMessage(chatId, pinnedMessage.message_id);
+        } catch (error) {
+            console.error('Ошибка при отправке сообщения:', error.message)
+        }
+    });
 });
 
 // Обработчик команды /help
